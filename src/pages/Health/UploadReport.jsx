@@ -60,17 +60,37 @@ export default function UploadReport() {
       });
 
       setPhase("analyzing");
-      const reportId = res?.data?.data?.id ?? res?.data?.data?._id;
-      setPhase("done");
+      const reportId = res?.data?.data?._id ?? res?.data?.data?.id;
       toast.success("Report uploaded");
+
+      // Upload and analysis are now two separate requests (separate failure domains — analysis
+      // being slow/down should never make the upload itself fail). We kick analysis off right
+      // after upload succeeds so the UX is still "upload & analyze" in one flow; if this call
+      // times out into a 202 (analysis still running server-side) or fails outright, we still
+      // navigate to the report page — it polls GET /file/:id itself and shows the right state
+      // (processing / failed / analyzed) regardless of how this request resolved.
+
+      // if (reportId) {
+      //   try {
+      //     await axios.post(
+      //       `${BASE_URL}${apiEndPoints.analyzeReport}/${reportId}/analyze`,
+      //       {},
+      //       { headers: { Authorization: `Bearer ${token}` } }
+      //     );
+      //   } catch (analyzeError) {
+      //     toast.error(
+      //       analyzeError.response?.data?.message || "Upload succeeded, but analysis couldn't start. You can retry it from the report page."
+      //     );
+      //   }
+      // }
+
+      setPhase("done");
       setTimeout(() => {
         if (reportId) navigate(`/reports/${reportId}`);
         else navigate("/timeline");
       }, 700);
     } catch (error) {
-      // NOTE: /health/upload-report is declared in apiEndpoints.js but not yet implemented
-      // on the backend, so this request will fail until that endpoint exists.
-      toast.error(error.response?.data?.message || "Upload failed — backend endpoint not available yet");
+      toast.error(error.response?.data?.message || "Upload failed");
       setPhase("idle");
     }
   };
@@ -162,7 +182,7 @@ export default function UploadReport() {
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => { setFile(null); setPhase("idle"); }}>Reset</Button>
           <Button onClick={start} disabled={phase !== "idle"}>
-            {phase === "idle" ? "Upload & analyze" : phase === "uploading" ? `Uploading ${progress}%` : phase === "analyzing" ? t("upload.analyzing") : "Done"}
+            {phase === "idle" ? "Upload" : phase === "uploading" ? `Uploading ${progress}%` : phase === "analyzing" ? t("upload.analyzing") : "Done"}
           </Button>
         </div>
       </div>

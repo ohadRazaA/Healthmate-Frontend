@@ -36,13 +36,14 @@ export default function ReportViewer() {
   const [chatInput, setChatInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [isTalking, setIsTalking] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const chatSectionRef = useRef(null);
   const historyLoadedRef = useRef(false);
   const { fileId } = useParams();
   const { lang } = useApp();
   const token = Cookies.get("token");
 
-  const { data, isLoading, isError } = useFetchData(
+  const { data, isLoading, isError, refetch } = useFetchData(
     `report-${fileId}`,
     `${BASE_URL}${apiEndPoints.getFileInsights}/${fileId}`,
     {},
@@ -53,6 +54,25 @@ export default function ReportViewer() {
   );
 
   const report = data?.data;
+
+  // Analysis is now a separate step from upload (POST /file/:id/analyze), so a report can sit in
+  // "uploaded" (never analyzed yet) or "failed" (analysis errored) indefinitely without this.
+  const runAnalysis = useCallback(async () => {
+    if (isAnalyzing) return;
+    setIsAnalyzing(true);
+    try {
+      await fetch(`${BASE_URL}${apiEndPoints.analyzeReport}/${fileId}/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      });
+    } catch {
+      // swallow — the poll below (and the manual refetch) will surface whatever state the
+      // backend actually ended up in either way.
+    } finally {
+      setIsAnalyzing(false);
+      refetch();
+    }
+  }, [fileId, token, isAnalyzing, refetch]);
 
   // Load any previously-saved conversation for this report once, so a page refresh doesn't
   // wipe the chat. Guarded by a ref (not just messages.length === 0) so it can't accidentally
@@ -242,14 +262,26 @@ export default function ReportViewer() {
         </div>
 
         <div className="rounded-2xl border bg-card p-5 space-y-5 min-h-72">
-          {report.status === "processing" ? (
+          {report.status === "uploaded" ? (
+            <div className="rounded-xl border bg-muted/10 p-4 text-sm space-y-2">
+              <p>This report hasn't been analyzed yet.</p>
+              <Button size="sm" onClick={runAnalysis} disabled={isAnalyzing}>
+                {isAnalyzing ? "Starting…" : "Analyze this report"}
+              </Button>
+            </div>
+          ) : report.status === "processing" ? (
             <div className="rounded-xl border bg-primary/5 p-4 text-sm text-primary">
               We're analyzing this report. Check back in a moment.
             </div>
           ) : report.status === "failed" ? (
-            <div className="rounded-xl border bg-destructive/5 p-4 text-sm text-destructive">
-              {report.analysisError || "We couldn't analyze this report automatically."} You can still view/download the
-              original file, or try re-uploading a clearer copy.
+            <div className="rounded-xl border bg-destructive/5 p-4 text-sm text-destructive space-y-2">
+              <p>
+                {report.analysisError || "We couldn't analyze this report automatically."} You can still view/download the
+                original file, or try re-uploading a clearer copy.
+              </p>
+              <Button size="sm" variant="outline" onClick={runAnalysis} disabled={isAnalyzing}>
+                {isAnalyzing ? "Retrying…" : "Retry analysis"}
+              </Button>
             </div>
           ) : (
             <>
@@ -395,6 +427,8 @@ export default function ReportViewer() {
                   ? "Ask a question about this report"
                   : report.status === "processing"
                   ? "Still analyzing this report — try again shortly"
+                  : report.status === "uploaded"
+                  ? "Analyze this report above to start chatting"
                   : "This report couldn't be analyzed, so it can't be discussed yet"
               }
               disabled={report.status !== "analyzed" || isTalking}

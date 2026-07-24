@@ -13,6 +13,7 @@ const apiEndPoints = {
     
     // Health endpoints
     uploadReport: "/health/upload-report",
+    analyzeReport: "/health/file", // POST `${analyzeReport}/${id}/analyze`
     addVitals: "/health/add-vitals",
     getVitals: "/health/get-vitals",
     getTimeline: "/health/timeline",

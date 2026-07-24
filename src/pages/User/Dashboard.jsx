@@ -119,7 +119,6 @@ export default function Dashboard() {
         </div>
       </motion.header>
 
-
       {reports.length === 0 && vitals.length === 0 ? (
         <EmptyState
           icon={<FileText className="h-6 w-6" />}
@@ -168,7 +167,7 @@ export default function Dashboard() {
             />
           </div>
 
-      <RiskAssessmentPanel />
+          <RiskAssessmentPanel />
 
 
           <div className="grid gap-6 lg:grid-cols-3">

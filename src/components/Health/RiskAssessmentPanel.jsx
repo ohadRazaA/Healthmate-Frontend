@@ -36,6 +36,8 @@ function RiskBadge({ level }) {
 export default function RiskAssessmentPanel() {
   const token = Cookies.get("token");
 
+  // Reuses the same "dashboard" query the Dashboard page already fetches — React Query dedupes
+  // this by queryKey, so mounting the panel next to Dashboard doesn't cause an extra request.
   const { data: dashboardData } = useFetchData(
     "dashboard",
     `${BASE_URL}${apiEndPoints.getDashboard}`,
