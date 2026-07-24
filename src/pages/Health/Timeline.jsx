@@ -52,6 +52,7 @@ export default function Timeline() {
             diastolic: v.diastolic,
             sugar: v.sugar,
             weight: v.weight,
+            bmi: v.bmi,
           };
         }),
     [vitals]
@@ -119,10 +120,11 @@ export default function Timeline() {
         />
       ) : (
         <>
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
             <Chart title="Blood pressure" data={trend} keys={["systolic", "diastolic"]} colors={["var(--color-primary)", "var(--color-accent-foreground)"]} />
             <Chart title="Blood sugar" data={trend} keys={["sugar"]} colors={["var(--color-warning)"]} />
             <Chart title="Weight" data={trend} keys={["weight"]} colors={["var(--color-success)"]} />
+            <Chart title="BMI" data={trend} keys={["bmi"]} colors={["var(--color-accent)"]} />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -154,7 +156,7 @@ export default function Timeline() {
             ) : (
               entries.map((e) => (
               <li key={`${e.kind}-${e.id}`} className="relative">
-                <span className={`absolute -left-[33px] top-2 grid h-6 w-6 place-items-center rounded-full ring-4 ring-background ${
+                <span className={`absolute -left-8.25 top-2 grid h-6 w-6 place-items-center rounded-full ring-4 ring-background ${
                   e.kind === "report" ? "bg-primary text-primary-foreground" : "bg-accent text-accent-foreground"
                 }`}>
                   {e.kind === "report" ? <FileText className="h-3 w-3" /> : <Heart className="h-3 w-3" />}
@@ -179,6 +181,7 @@ export default function Timeline() {
                       {e.data.systolic ? <Chip>BP {e.data.systolic}/{e.data.diastolic}</Chip> : null}
                       {e.data.sugar ? <Chip>Sugar {e.data.sugar} mg/dL</Chip> : null}
                       {e.data.weight ? <Chip>Weight {e.data.weight} kg</Chip> : null}
+                      {e.data.bmi ? <Chip>BMI {e.data.bmi}</Chip> : null}
                     </div>
                     {e.data.note ? <p className="mt-2 text-xs text-muted-foreground">{e.data.note}</p> : null}
                   </div>

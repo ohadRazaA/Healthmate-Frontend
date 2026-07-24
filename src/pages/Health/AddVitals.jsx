@@ -1,3 +1,4 @@
+import { useContext } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
@@ -6,11 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useApp } from "@/lib/app-context";
+import { AuthContext } from "../../context api/AuthContext";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Activity, Droplets, Heart, Weight } from "lucide-react";
+import { Activity, Droplets, Heart, Scale, Weight } from "lucide-react";
 import apiEndPoints, { BASE_URL } from "../../constants/apiEndpoints";
 
 const schema = z.object({
@@ -18,6 +20,7 @@ const schema = z.object({
   diastolic: z.coerce.number().min(30).max(160).optional().or(z.literal("")),
   sugar: z.coerce.number().min(30).max(600).optional().or(z.literal("")),
   weight: z.coerce.number().min(20).max(300).optional().or(z.literal("")),
+  bmi: z.coerce.number().min(10).max(80).optional().or(z.literal("")),
   when: z.string().min(1),
   note: z.string().max(200).optional(),
 });
@@ -29,9 +32,28 @@ const presets = [
   { label: "After walk", vals: { note: "After a brisk walk" } },
 ];
 
+function calculateAge(dateOfBirth) {
+  if (!dateOfBirth) return null;
+
+  const birthDate = new Date(dateOfBirth);
+  if (Number.isNaN(birthDate.getTime())) return null;
+
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age -= 1;
+  }
+
+  return age;
+}
+
 export default function AddVitals() {
   const { t } = useApp();
   const navigate = useNavigate();
+  const { data: authData } = useContext(AuthContext);
+  const user = authData?.data;
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: { when: new Date().toISOString().slice(0, 16) },
@@ -41,9 +63,14 @@ export default function AddVitals() {
   const submit = handleSubmit(async (values) => {
     try {
       const token = Cookies.get("token");
+      const payload = {
+        ...values,
+        age: calculateAge(user?.dateOfBirth),
+        sex: user?.sex || undefined,
+      };
       // NOTE: /health/add-vitals is declared in apiEndpoints.js but not yet implemented on
       // the backend. Wired here per the agreed approach so it works once the backend ships it.
-      await axios.post(`${BASE_URL}${apiEndPoints.addVitals}`, values, {
+      await axios.post(`${BASE_URL}${apiEndPoints.addVitals}`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success(t("vitals.saved"));
@@ -59,7 +86,7 @@ export default function AddVitals() {
       <header>
         <h1 className="font-display text-3xl font-bold">{t("vitals.title")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Log BP, sugar and weight so we can chart your progress.
+          Log BP, sugar, weight and BMI so we can chart your progress.
         </p>
       </header>
 
@@ -90,6 +117,9 @@ export default function AddVitals() {
           </FieldGroup>
           <FieldGroup icon={Weight} title="Weight" hint="kg">
             <Input placeholder="e.g. 66.5" inputMode="decimal" {...register("weight")} />
+          </FieldGroup>
+          <FieldGroup icon={Scale} title="BMI" hint="kg/m²">
+            <Input placeholder="e.g. 22.4" inputMode="decimal" {...register("bmi")} />
           </FieldGroup>
           <FieldGroup icon={Activity} title="Date & time">
             <Input type="datetime-local" {...register("when")} />

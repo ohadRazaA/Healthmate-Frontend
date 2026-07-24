@@ -24,6 +24,8 @@ const signupSchema = z.object({
   lastName: z.string().min(1, "Enter your last name"),
   email: z.string().email("Enter a valid email"),
   password: z.string().min(8, "At least 8 characters"),
+  dateOfBirth: z.string().optional().or(z.literal("")),
+  sex: z.enum(["male", "female", "other", "prefer_not_to_say"]).optional().or(z.literal("")),
 });
 
 export default function AuthPage({ initialMode = "login" }) {
@@ -170,13 +172,15 @@ function SignupForm() {
   const form = useForm({ resolver: zodResolver(signupSchema) });
   const { register, handleSubmit, formState } = form;
 
-  const submit = handleSubmit(async ({ firstName, lastName, email, password }) => {
+  const submit = handleSubmit(async ({ firstName, lastName, email, password, dateOfBirth, sex }) => {
     try {
       const res = await axios.post(`${BASE_URL}${apiEndPoints.signup}`, {
         firstName,
         lastName,
         email,
         password,
+        dateOfBirth,
+        sex,
       });
       const type = res?.data?.data?.type;
       toast.success("Account created — verify your email");
@@ -201,6 +205,22 @@ function SignupForm() {
       <Field label="Email" error={formState.errors.email?.message}>
         <Input type="email" autoComplete="email" placeholder="you@example.com" {...register("email")} />
       </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Date of birth" error={formState.errors.dateOfBirth?.message}>
+          <Input type="date" {...register("dateOfBirth")} />
+        </Field>
+        <Field label="Sex" error={formState.errors.sex?.message}>
+          <select
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            {...register("sex")}
+          >
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+            <option value="prefer_not_to_say">Prefer not to say</option>
+          </select>
+        </Field>
+      </div>
       <Field label="Password" error={formState.errors.password?.message}>
         <Input type="password" autoComplete="new-password" {...register("password")} />
       </Field>

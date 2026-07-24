@@ -11,6 +11,7 @@ import {
   Droplets,
   FileText,
   Plus,
+  Scale,
   Sparkles,
   Upload,
   Heart,
@@ -20,6 +21,7 @@ import { format, formatDistanceToNow, parseISO, isValid } from "date-fns";
 import { motion } from "framer-motion";
 import { useFetchData } from "../../hooks/useFetchData";
 import apiEndPoints, { BASE_URL } from "../../constants/apiEndpoints";
+import RiskAssessmentPanel from "../../components/Health/RiskAssessmentPanel";
 
 // Parses a date value defensively. Real backend records may use a different field name
 // or format than the mock data did (e.g. `createdAt` instead of `date`, or already a
@@ -54,8 +56,8 @@ export default function Dashboard() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-10 w-64" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-24 rounded-2xl" />
           ))}
         </div>
@@ -77,6 +79,16 @@ export default function Dashboard() {
   const latest = vitals[0];
   const analyzed = reports.filter((r) => r.status === "analyzed");
   const lastAnalyzed = analyzed[0];
+  const latestRecorded = latest ? safeParseISO(latest.when ?? latest.date) : null;
+  const latestBpValue = latest?.systolic != null && latest?.diastolic != null ? `${latest.systolic}/${latest.diastolic}` : "—";
+  const latestSugarValue = latest?.sugar != null ? String(latest.sugar) : "—";
+  const latestWeightValue = latest?.weight != null ? String(latest.weight) : "—";
+  const latestBmiValue = latest?.bmi != null ? String(latest.bmi) : "—";
+  const latestBpSub = latestRecorded ? `mmHg · ${formatDistanceToNow(latestRecorded, { addSuffix: true })}` : null;
+  const latestSugarSub = latestRecorded ? `mg/dL · ${formatDistanceToNow(latestRecorded, { addSuffix: true })}` : null;
+  const latestWeightSub = latestRecorded ? `kg · ${formatDistanceToNow(latestRecorded, { addSuffix: true })}` : null;
+  const latestBmiSub = latestRecorded ? `kg/m² · ${formatDistanceToNow(latestRecorded, { addSuffix: true })}` : null;
+
   const trend = [...vitals].reverse().map((v) => ({
     date: safeParseISO(v.when ?? v.date) ? format(safeParseISO(v.when ?? v.date), "MMM d") : "—",
     systolic: v.systolic,
@@ -107,6 +119,7 @@ export default function Dashboard() {
         </div>
       </motion.header>
 
+
       {reports.length === 0 && vitals.length === 0 ? (
         <EmptyState
           icon={<FileText className="h-6 w-6" />}
@@ -116,20 +129,36 @@ export default function Dashboard() {
         />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <Stat icon={FileText} label={t("dashboard.reports")} value={String(reports.length)} sub={`${analyzed.length} analyzed`} />
-            {latest ? (
-              <>
-                <Stat
-                  icon={Heart}
-                  label={t("dashboard.latestBp")}
-                  value={`${latest.systolic}/${latest.diastolic}`}
-                  sub={`mmHg${safeParseISO(latest.when ?? latest.date) ? " · " + formatDistanceToNow(safeParseISO(latest.when ?? latest.date), { addSuffix: true }) : ""}`}
-                  tone="primary"
-                />
-                <Stat icon={Droplets} label={t("dashboard.latestSugar")} value={`${latest.sugar}`} sub="mg/dL · fasting" tone="warn" />
-              </>
-            ) : null}
+            <Stat
+              icon={Heart}
+              label={t("dashboard.latestBp")}
+              value={latestBpValue}
+              sub={latestBpSub}
+              tone="primary"
+            />
+            <Stat
+              icon={Droplets}
+              label={t("dashboard.latestSugar")}
+              value={latestSugarValue}
+              sub={latestSugarSub}
+              tone="warn"
+            />
+            <Stat
+              icon={Scale}
+              label="Latest weight"
+              value={latestWeightValue}
+              sub={latestWeightSub}
+              tone="success"
+            />
+            <Stat
+              icon={Scale}
+              label="Latest BMI"
+              value={latestBmiValue}
+              sub={latestBmiSub}
+              tone="success"
+            />
             <Stat
               icon={Sparkles}
               label={t("dashboard.lastSummary")}
@@ -138,6 +167,9 @@ export default function Dashboard() {
               tone="success"
             />
           </div>
+
+      <RiskAssessmentPanel />
+
 
           <div className="grid gap-6 lg:grid-cols-3">
             <section className="lg:col-span-2 rounded-2xl border bg-card p-5">
