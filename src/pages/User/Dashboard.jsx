@@ -51,6 +51,10 @@ export default function Dashboard() {
   const reports = data?.data?.reports ?? [];
   const vitals = data?.data?.vitals ?? [];
   const user = data?.data;
+  // getDashboard now returns a capped "recent" list (see Backend/controllers/userController.js)
+  // plus these accurate totals — use the totals for stats, the list for the on-screen preview.
+  const reportsCount = data?.data?.reportsCount ?? reports.length;
+  const analyzedReportsCount = data?.data?.analyzedReportsCount ?? reports.filter((r) => r.status === "analyzed").length;
 
   if (isLoading) {
     return (
@@ -119,7 +123,8 @@ export default function Dashboard() {
         </div>
       </motion.header>
 
-      {reports.length === 0 && vitals.length === 0 ? (
+
+      {reportsCount === 0 && vitals.length === 0 ? (
         <EmptyState
           icon={<FileText className="h-6 w-6" />}
           title="No health data yet"
@@ -129,7 +134,7 @@ export default function Dashboard() {
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <Stat icon={FileText} label={t("dashboard.reports")} value={String(reports.length)} sub={`${analyzed.length} analyzed`} />
+            <Stat icon={FileText} label={t("dashboard.reports")} value={String(reportsCount)} sub={`${analyzedReportsCount} analyzed`} />
             <Stat
               icon={Heart}
               label={t("dashboard.latestBp")}
@@ -166,9 +171,7 @@ export default function Dashboard() {
               tone="success"
             />
           </div>
-
-          <RiskAssessmentPanel />
-
+      <RiskAssessmentPanel />
 
           <div className="grid gap-6 lg:grid-cols-3">
             <section className="lg:col-span-2 rounded-2xl border bg-card p-5">
