@@ -1,7 +1,7 @@
 import React, { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import './lib/axiosConfig.js'
+import './lib/Axiosconfig.js'
 import { ThemeProvider } from '@emotion/react'
 import CssBaseline from '@mui/material/CssBaseline'
 import { getTheme } from './theme.js'
