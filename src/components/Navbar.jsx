@@ -34,59 +34,6 @@ function Navbar() {
   const { data, logout, isLoading } = React.useContext(AuthContext);
   const { firstName, type } = data?.data || {};
 
-  // const [form, setForm] = useState({
-  //   name: "",
-  //   description: "",
-  //   image: "",
-  //   subCategories: [{ name: "", description: "" }],
-  // });
-
-  // const handleChange = useCallback((e, index = null) => {
-  //   const { name, value } = e.target;
-
-  //   if (index !== null) {
-  //     const subs = [...form.subCategories];
-  //     subs[index] = { ...subs[index], [name]: value };
-  //     setForm({ ...form, subCategories: subs });
-  //   } else {
-  //     setForm({ ...form, [name]: value });
-  //   }
-  // }, [form]);
-
-  // const handleAddSub = useCallback(() => {
-  //   setForm({ ...form, subCategories: [...form.subCategories, { name: "", description: "" }] });
-  // }, [form]);
-
-  // const isFormValid = useMemo(() => {
-  //   if (!form.name.trim()) return false;
-  //   const hasInvalidSub = form.subCategories.some(sc => !sc.name.trim());
-  //   return !hasInvalidSub;
-  // }, [form]);
-
-  // const handleSubmit = useCallback(async () => {
-  //   if (!isFormValid) {
-  //     toast.error("Please fill required fields (category name and subcategory names)");
-  //     return;
-  //   }
-  //   try {
-  //     setIsSubmitting(true);
-  //     await axios.post(`${BASE_URL}${apiEndPoints.addLoanCategory}`, form, { headers: { Authorization: `Bearer ${Cookies.get("token")}` } });
-  //     toast.success("Category Added!", {
-  //       autoClose: 3000,
-  //       closeOnClick: true,
-  //       pauseOnHover: true,
-  //       draggable: true
-  //     });
-  //     setOpen(false);
-  //     setForm({ name: "", description: "", image: "", subCategories: [{ name: "", description: "" }] });
-  //   } catch (error) {
-  //     const message = error?.response?.data?.message || "Failed to add category";
-  //     toast.error(message);
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // }, [form, isFormValid]);
-
   const handleOpenNavMenu = useCallback((event) => {
     setAnchorElNav(event.currentTarget);
   }, []);

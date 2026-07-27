@@ -49,12 +49,12 @@ export function AbnormalChip({ v }) {
               {v.name}
             </span>
           </div>
-          <div className="text-right shrink-0 group-hover:mt-1.5 group-hover:self-end">
-            <div className="whitespace-nowrap font-semibold tabular-nums">
+          <div className="text-left shrink-0 group-hover:mt-1.5 group-hover:self-end">
+            <div className="font-semibold tabular-nums">
               {v.value}
               {v.unit ? <span className="ml-0.5 text-xs opacity-70">{v.unit}</span> : null}
+              {v.normalRange ? <div className="text-[10px] opacity-70">ref {v.normalRange}</div> : null}
             </div>
-            {v.normalRange ? <div className="whitespace-nowrap text-[10px] opacity-70">ref {v.normalRange}</div> : null}
           </div>
         </div>
       </div>
