@@ -1,6 +1,7 @@
 import React, { cache } from 'react';
 import { createContext, useState } from 'react'
 import Cookies from 'js-cookie'
+import axios from 'axios'
 import { useFetchData } from '../hooks/useFetchData';
 import apiEndPoints, { BASE_URL } from '../constants/apiEndpoints';
 import { useNavigate } from 'react-router-dom';
@@ -30,8 +31,23 @@ function AuthProvider({ children }) {
   );
 
   const logout = () => {
+    const currentToken = Cookies.get('token');
     Cookies.remove('token');
-    navigate('/auth')
+    navigate('/auth');
+
+    // Best-effort — fire-and-forget. The user is already signed out locally either way
+    // (cookie's gone); this just also tells the backend to blacklist the token server-side
+    // so it can't be reused elsewhere before its 7-day expiry (see Backend/middlewares/auth.js).
+    // Deliberately not awaited: local logout should never wait on or fail because of this call.
+    if (currentToken) {
+      axios
+        .post(
+          `${BASE_URL}${apiEndPoints.logout}`,
+          {},
+          { headers: { Authorization: `Bearer ${currentToken}` } }
+        )
+        .catch(() => {});
+    }
   };
 
   return (
