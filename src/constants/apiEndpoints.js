@@ -1,6 +1,6 @@
 // export const BASE_URL = `https://smit-hackathon-backend-sable.vercel.app/api`;
-// export const BASE_URL = `https://healthmate-backend-beta.vercel.app/api`
-export const BASE_URL = `http://localhost:5000/api`;
+export const BASE_URL = `https://healthmate-backend-beta.vercel.app/api`
+// export const BASE_URL = `http://localhost:5000/api`;
 const apiEndPoints = {
     // Auth endpoints
     login: "/auth/login",
